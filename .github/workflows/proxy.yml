@@ -1,0 +1,42 @@
+name: Remote Proxy Server
+
+on: 
+  workflow_dispatch:
+    inputs:
+      proxy_user:
+        description: 'Proxy Username'
+        required: true
+        default: 'admin'
+      proxy_pass:
+        description: 'Proxy Password'
+        required: true
+        default: '1111'
+      anonymous:
+        description: "Anonymous mode (no authentication, no credentials needed)"
+        default: false
+        required: false
+        type: boolean
+
+jobs:
+  run-proxy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+
+      - name: Install Dependencies
+        run: |
+          pip install proxy.py requests
+
+      - name: Run Proxy Server
+        env:
+          PROXY_USER: ${{ github.event.inputs.proxy_user }}
+          PROXY_PASS: ${{ github.event.inputs.proxy_pass }}
+          PYTHONUNBUFFERED: "1"
+          ANONYMOUS: ${{ github.event.inputs.anonymous }}
+        run: python proxy_server.py
