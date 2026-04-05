@@ -12,17 +12,22 @@ PORT = 8888
 USER = os.getenv("PROXY_USER", "admin")
 PASS = os.getenv("PROXY_PASS", "1111")
 ANONYMOUS = os.getenv("ANONYMOUS", "false").lower() == "true"
+TRAFFIC_LOGGING = os.getenv("TRAFFIC_LOGGING", "false").lower() == "true"
 MAX_RUNTIME = 3600 # 60 minutes
 
 def run_proxy_native():
     print(f"--- Proxy Engine starting on port {PORT} ---")
     try:
-        sys.argv = [sys.argv[0], '--hostname', '0.0.0.0', '--port', str(PORT), '--log-level', 'CRITICAL']
+        sys.argv = [sys.argv[0], '--hostname', '0.0.0.0', '--port', str(PORT)]
         if ANONYMOUS:
             print("[*] Running in ANONYMOUS mode (no authentication)")
         else:
             sys.argv += ['--basic-auth', f"{USER}:{PASS}"]
             print(f"[*] Authentication enabled")
+        if TRAFFIC_LOGGING:
+            sys.argv += ['--log-level', 'INFO']
+        else:
+            sys.argv += ['--log-level', 'CRITICAL']
         proxy.main()
     except Exception as e:
         print(f"[!] Proxy Error: {e}"); os._exit(1)

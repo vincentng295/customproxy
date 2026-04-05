@@ -16,6 +16,11 @@ on:
         default: false
         required: false
         type: boolean
+      traffic_logging:
+        description: "Enable traffic logging (logs all requests to console)"
+        default: false
+        required: false
+        type: boolean
 
 jobs:
   run-proxy:
@@ -39,4 +44,5 @@ jobs:
           PROXY_PASS: ${{ github.event.inputs.proxy_pass }}
           PYTHONUNBUFFERED: "1"
           ANONYMOUS: ${{ github.event.inputs.anonymous }}
+          TRAFFIC_LOGGING: ${{ github.event.inputs.traffic_logging }}
         run: python proxy_server.py
