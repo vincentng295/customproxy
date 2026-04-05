@@ -13,11 +13,16 @@ on:
         default: '1111'
       anonymous:
         description: "Anonymous mode (no authentication, no credentials needed)"
-        default: false
+        default: true
         required: false
         type: boolean
       traffic_logging:
         description: "Enable traffic logging (logs all requests to console)"
+        default: false
+        required: false
+        type: boolean
+      bridge_workflows:
+        description: "Bridge the workflows"
         default: false
         required: false
         type: boolean
@@ -34,9 +39,10 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: |
-          pip install proxy.py requests
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
       - name: Run Proxy Server
         env:
@@ -45,4 +51,6 @@ jobs:
           PYTHONUNBUFFERED: "1"
           ANONYMOUS: ${{ github.event.inputs.anonymous }}
           TRAFFIC_LOGGING: ${{ github.event.inputs.traffic_logging }}
-        run: python proxy_server.py
+          BRIDGE_WORKFLOWS: ${{ github.event.inputs.bridge_workflows }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python gitactions.py

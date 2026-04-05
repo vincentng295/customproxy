@@ -1,3 +1,4 @@
+import json
 import threading
 import time
 import subprocess
@@ -11,7 +12,7 @@ import requests
 PORT = 8888
 USER = os.getenv("PROXY_USER", "admin")
 PASS = os.getenv("PROXY_PASS", "1111")
-ANONYMOUS = os.getenv("ANONYMOUS", "false").lower() == "true"
+ANONYMOUS = os.getenv("ANONYMOUS", "true").lower() == "true"
 TRAFFIC_LOGGING = os.getenv("TRAFFIC_LOGGING", "false").lower() == "true"
 MAX_RUNTIME = 3600 # 60 minutes
 
@@ -89,6 +90,15 @@ def start_pinggy_tunnel():
             
             sys.stdout.flush()
             found_url = True
+            # Write to json file for easy access
+            proxy_json = {
+                "host": host,
+                "port": int(remote_port),
+                "auth": None if ANONYMOUS else {"username": USER, "password": PASS},
+                "start_time": int(time.time())
+            }
+            with open("pinggy_tunnel_info.json", "w") as f:
+                f.write(json.dumps(proxy_json, indent=4))
             # We don't break, let SSH continue running in the background
 
 def get_public_url():
@@ -100,7 +110,7 @@ def get_public_url():
         print(f"[!] Failed to get public IP: {e}")
         return None
 
-if __name__ == "__main__":
+def main():
     PRINT_URL = get_public_url()
     if PRINT_URL:
         print(f"Current IP: {PRINT_URL}")
@@ -113,3 +123,6 @@ if __name__ == "__main__":
     
     # 3. Start Proxy Engine
     run_proxy_native()
+
+if __name__ == "__main__":
+    main()
