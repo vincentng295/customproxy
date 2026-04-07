@@ -79,7 +79,8 @@ def start_pinggy_tunnel():
                 # Search for the pattern in the accumulated buffer
                 # This matches the 'rurii-115-73-12-222.run.pinggy-free.link:33877' format
                 clean_text = re.sub(r'\x1b\[[0-9;]*[mGKHJKfP]', '', buffer)
-                match = re.search(r"([\w-]+\.run\.pinggy-free\.link):(\d{4,5})(?!\d)\s", clean_text)
+                # The port should always be 5 digits
+                match = re.search(r"([\w-]+\.run\.pinggy-free\.link):(\d{5})", clean_text)
                 
                 if match and not found_url:
                     host = match.group(1)
