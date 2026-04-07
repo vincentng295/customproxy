@@ -15,6 +15,8 @@ PASS = os.getenv("PROXY_PASS", "1111")
 ANONYMOUS = os.getenv("ANONYMOUS", "true").lower() == "true"
 TRAFFIC_LOGGING = os.getenv("TRAFFIC_LOGGING", "false").lower() == "true"
 MAX_RUNTIME = 3600 # 60 minutes
+START_TIME = int(time.time())
+END_TIME= START_TIME + MAX_RUNTIME
 
 def run_proxy_native():
     print(f"--- Proxy Engine starting on port {PORT} ---")
@@ -98,7 +100,8 @@ def start_pinggy_tunnel():
                         "host": host,
                         "port": int(remote_port),
                         "auth": None if ANONYMOUS else {"username": USER, "password": PASS},
-                        "start_time": int(time.time())
+                        "start_time": START_TIME,
+                        "end_time": END_TIME
                     }
                     with open("pinggy_tunnel_info.json", "w") as f:
                         f.write(json.dumps(proxy_json, indent=4))
