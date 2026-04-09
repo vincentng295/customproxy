@@ -45,12 +45,15 @@ def start_pinggy_tunnel():
         
         cmd = [
             "ssh", "-p", "443", "-t", "-t", 
-            "-o", "StrictHostKeyChecking=no", 
-            "-o", "ServerAliveInterval=30",
-            "-o", "ServerAliveCountMax=3",
-            "-o", "BatchMode=yes", 
+            "-o", "StrictHostKeyChecking=no",
+            "-o", "BatchMode=yes",
             "-o", "ConnectTimeout=10",
-            "-R", f"0:127.0.0.1:{PORT}", "tcp@free.pinggy.io"
+            "-o", "ConnectionAttempts=1",
+            "-o", "ExitOnForwardFailure=yes",
+            "-o", "ServerAliveInterval=5",
+            "-o", "ServerAliveCountMax=1",
+            "-R", f"0:127.0.0.1:{PORT}",
+            "tcp@free.pinggy.io"
         ]
         
         process = subprocess.Popen(
