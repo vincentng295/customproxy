@@ -1,3 +1,4 @@
 proxy.py
 requests
 GitPython
+pinggy

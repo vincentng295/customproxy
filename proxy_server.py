@@ -4,7 +4,7 @@ import time
 import subprocess
 import os
 import sys
-import re
+import pinggy
 import proxy
 import requests
 
@@ -36,87 +36,73 @@ def run_proxy_native():
         print(f"[!] Proxy Error: {e}"); os._exit(1)
 
 def start_pinggy_tunnel():
-    """
-    Reads raw characters to bypass ANSI 'clear screen' and terminal positioning.
-    This is the most aggressive way to capture the URL.
-    """
     while True:
-        print("--- Connecting to Pinggy... (AGGRESSIVE SCANNING) ---")
-        
-        cmd = [
-            "ssh", "-p", "443", "-t", "-t", 
-            "-o", "StrictHostKeyChecking=no",
-            "-o", "BatchMode=yes",
-            "-o", "ConnectTimeout=10",
-            "-o", "ConnectionAttempts=1",
-            "-o", "ExitOnForwardFailure=yes",
-            "-o", "ServerAliveInterval=5",
-            "-o", "ServerAliveCountMax=1",
-            "-R", f"0:127.0.0.1:{PORT}",
-            "tcp@free.pinggy.io"
-        ]
-        
-        process = subprocess.Popen(
-            cmd, 
-            stdout=subprocess.PIPE, 
-            stderr=subprocess.STDOUT, 
-            text=True, 
-            bufsize=0, # Unbuffered reading
-            encoding='utf-8', 
-            errors='ignore'
-        )
+        print("--- Connecting to Pinggy via SDK ---")
 
-        found_url = False
-        buffer = "" # To store incoming characters
         try:
-            while True:
-                # Read ONE character at a time
-                char = process.stdout.read(1)
-                if not char: break
-                
-                buffer += char
-                # Keep the buffer small to save memory, but long enough for the URL
-                if len(buffer) > 2000:
-                    buffer = buffer[-1000:]
+            # Start tunnel
+            tunnel = pinggy.start_tunnel(
+                forwardto=f"localhost:{PORT}",
+                type="tcp"
+            )
 
-                # Search for the pattern in the accumulated buffer
-                # This matches the 'rurii-115-73-12-222.run.pinggy-free.link:33877' format
-                clean_text = re.sub(r'\x1b\[[0-9;]*[mGKHJKfP]', '', buffer)
-                # The port should always be 5 digits
-                match = re.search(r"([\w-]+\.run\.pinggy-free\.link):(\d{5})", clean_text)
-                
-                if match and not found_url:
-                    host = match.group(1)
-                    remote_port = match.group(2)
-                    
-                    print("\n" + "*" * 25)
-                    print(f"  SUCCESS! TUNNEL CAPTURED")
-                    print(f"  PUBLIC HOST : {host}")
-                    print(f"  PUBLIC PORT : {remote_port}")
-                    if not ANONYMOUS:
-                        print(f"  AUTH        : {USER}:{PASS}")
-                    print("*" * 25 + "\n")
-                    
-                    sys.stdout.flush()
-                    found_url = True
-                    # Write to json file for easy access
-                    proxy_json = {
-                        "host": host,
-                        "port": int(remote_port),
-                        "auth": None if ANONYMOUS else {"username": USER, "password": PASS},
-                        "start_time": START_TIME,
-                        "end_time": END_TIME
-                    }
-                    with open("pinggy_tunnel_info.json", "w") as f:
-                        f.write(json.dumps(proxy_json, indent=4))
-                    # We don't break, let SSH continue running in the background
+            # Pinggy returns list URLs
+            urls = tunnel.urls
+
+            if not urls:
+                raise Exception("No URLs returned from Pinggy")
+            tcp_url = None
+            print(urls)
+            for url in urls:
+                if url.startswith("tcp://"):
+                    tcp_url = url
+                    break
+            if not tcp_url:
+                # fallback
+                tcp_url = urls[0]
+
+            # Parse host + port
+            if "://" in tcp_url:
+                tcp_url = tcp_url.split("://")[1]
+
+            host, port = tcp_url.split(":")
+            port = int(port)
+
+            print("\n" + "*" * 25)
+            print("  SUCCESS! TUNNEL CREATED")
+            print(f"  PUBLIC HOST : {host}")
+            print(f"  PUBLIC PORT : {port}")
+            if not ANONYMOUS:
+                print(f"  AUTH        : {USER}:{PASS}")
+            print("*" * 25 + "\n")
+
+            # Save JSON
+            proxy_json = {
+                "host": host,
+                "port": port,
+                "auth": None if ANONYMOUS else {
+                    "username": USER,
+                    "password": PASS
+                },
+                "start_time": START_TIME,
+                "end_time": END_TIME
+            }
+
+            with open("pinggy_tunnel_info.json", "w") as f:
+                json.dump(proxy_json, f, indent=4)
+
+            # keep tunnel alive
+            while True:
+                time.sleep(5)
+
         except KeyboardInterrupt:
             print("KeyboardInterrupt received")
             break
+
         except Exception as e:
-            print(f"Error: {e}")
-        process.terminate()
-        print("Retrying in 15s...")
+            print(f"[!] Pinggy error: {e}")
+
+        print("Retrying in 15s...\n")
         time.sleep(15)
 
 def get_public_url():
