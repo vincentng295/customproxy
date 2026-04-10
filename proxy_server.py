@@ -17,6 +17,7 @@ TRAFFIC_LOGGING = os.getenv("TRAFFIC_LOGGING", "false").lower() == "true"
 MAX_RUNTIME = 3600 # 60 minutes
 START_TIME = int(time.time())
 END_TIME= START_TIME + MAX_RUNTIME
+PUBLIC_IP = "0.0.0.0"
 
 def run_proxy_native():
     print(f"--- Proxy Engine starting on port {PORT} ---")
@@ -67,6 +68,10 @@ def start_pinggy_tunnel():
 
             host, port = tcp_url.split(":")
             port = int(port)
+            
+            PUBLIC_IP = get_public_url()
+            if PUBLIC_IP:
+                print(f"Current IP: {PUBLIC_IP}")
 
             print("\n" + "*" * 25)
             print("  SUCCESS! TUNNEL CREATED")
@@ -84,6 +89,7 @@ def start_pinggy_tunnel():
                     "username": USER,
                     "password": PASS
                 },
+                "ip": PUBLIC_IP,
                 "start_time": START_TIME,
                 "end_time": END_TIME
             }
@@ -115,10 +121,6 @@ def get_public_url():
         return None
 
 def main():
-    PRINT_URL = get_public_url()
-    if PRINT_URL:
-        print(f"Current IP: {PRINT_URL}")
-
     # 1. Timer
     threading.Thread(target=lambda: (time.sleep(MAX_RUNTIME), os._exit(0)), daemon=True).start()
     
