@@ -7,8 +7,8 @@ from github_utils import upload_file
 
 if __name__ == "__main__":
     if os.getenv("BRIDGE_WORKFLOWS", "false").lower() == "true":
-        # Run the bridge workflow after 55 minutes to continue the workflow before the 60 minute timeout
-        thread_bridge = threading.Timer(55 * 60, bridge_workflows.run)
+        # Run the bridge workflow after 50 minutes to continue the workflow before the 60 minute timeout
+        thread_bridge = threading.Timer(50 * 60, bridge_workflows.run)
         thread_bridge.daemon = True
         thread_bridge.start()
 
