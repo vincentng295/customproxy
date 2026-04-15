@@ -2,3 +2,4 @@ proxy.py
 requests
 GitPython
 pinggy
+python-dotenv

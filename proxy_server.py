@@ -7,6 +7,8 @@ import sys
 import pinggy
 import proxy
 import requests
+from dotenv import load_dotenv
+load_dotenv()
 
 # --- CONFIGURATION ---
 PORT = 8888
