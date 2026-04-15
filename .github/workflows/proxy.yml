@@ -11,6 +11,9 @@ on:
         description: 'Proxy Password'
         required: true
         default: '1111'
+      webhook_url:
+        description: 'Webhook URL'
+        required: false
       anonymous:
         description: "Anonymous mode (no authentication, no credentials needed)"
         default: true
@@ -55,5 +58,6 @@ jobs:
           ANONYMOUS: ${{ github.event.inputs.anonymous }}
           TRAFFIC_LOGGING: ${{ github.event.inputs.traffic_logging }}
           BRIDGE_WORKFLOWS: ${{ github.event.inputs.bridge_workflows }}
+          WEBHOOK_URL: ${{ github.event.inputs.webhook_url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python gitactions.py

@@ -15,6 +15,7 @@ PASS = os.getenv("PROXY_PASS", "1111")
 ANONYMOUS = os.getenv("ANONYMOUS", "true").lower() == "true"
 TRAFFIC_LOGGING = os.getenv("TRAFFIC_LOGGING", "false").lower() == "true"
 MAX_RUNTIME = os.getenv("MAX_RUNTIME", "3600")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL", "")
 try:
     MAX_RUNTIME = int(MAX_RUNTIME)
 except:
@@ -22,6 +23,26 @@ except:
 START_TIME = int(time.time())
 END_TIME= START_TIME + MAX_RUNTIME
 PUBLIC_IP = "0.0.0.0"
+
+def send_webhook(data):
+    if not WEBHOOK_URL: 
+        return
+    def task():
+        try:
+            response = requests.post(
+                WEBHOOK_URL, 
+                json=data,
+                timeout=10
+            )
+            if response.status_code == 200:
+                print("[+] Webhook sent successfully!")
+            else:
+                print(f"[-] Webhook failed with status: {response.status_code}")
+        except Exception as e:
+            print(f"[!] Error sending webhook: {e}")
+    thread = threading.Thread(target=task)
+    thread.daemon = True
+    thread.start()
 
 def run_proxy_native():
     print(f"--- Proxy Engine starting on port {PORT} ---")
@@ -98,7 +119,7 @@ def start_pinggy_tunnel():
                 "start_time": START_TIME,
                 "end_time": END_TIME
             }
-
+            send_webhook(proxy_json)
             with open("pinggy_tunnel_info.json", "w") as f:
                 json.dump(proxy_json, f, indent=4)
 
