@@ -14,7 +14,11 @@ USER = os.getenv("PROXY_USER", "admin")
 PASS = os.getenv("PROXY_PASS", "1111")
 ANONYMOUS = os.getenv("ANONYMOUS", "true").lower() == "true"
 TRAFFIC_LOGGING = os.getenv("TRAFFIC_LOGGING", "false").lower() == "true"
-MAX_RUNTIME = 3600 # 60 minutes
+MAX_RUNTIME = os.getenv("MAX_RUNTIME", "3600")
+try:
+    MAX_RUNTIME = int(MAX_RUNTIME)
+except:
+    MAX_RUNTIME = 3600
 START_TIME = int(time.time())
 END_TIME= START_TIME + MAX_RUNTIME
 PUBLIC_IP = "0.0.0.0"
@@ -37,6 +41,7 @@ def run_proxy_native():
         print(f"[!] Proxy Error: {e}"); os._exit(1)
 
 def start_pinggy_tunnel():
+    retry = 0
     while True:
         print("--- Connecting to Pinggy via SDK ---")
 
@@ -99,6 +104,9 @@ def start_pinggy_tunnel():
 
             # keep tunnel alive
             while True:
+                if not tunnel.is_active():
+                    print("[!] Tunnel is down. Attempting to reconnect...")
+                    break
                 time.sleep(5)
 
         except KeyboardInterrupt:
@@ -107,9 +115,8 @@ def start_pinggy_tunnel():
 
         except Exception as e:
             print(f"[!] Pinggy error: {e}")
-
-        print("Retrying in 15s...\n")
-        time.sleep(15)
+            print("Retrying in 15s...\n")
+            time.sleep(15)
 
 def get_public_url():
     # Get ip via ipify
