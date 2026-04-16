@@ -152,7 +152,8 @@ def get_public_url():
 
 def main():
     # 1. Timer
-    threading.Thread(target=lambda: (time.sleep(MAX_RUNTIME), os._exit(0)), daemon=True).start()
+    if MAX_RUNTIME > 0:
+        threading.Thread(target=lambda: (time.sleep(MAX_RUNTIME), os._exit(0)), daemon=True).start()
     
     # 2. Start Aggressive Tunnel Thread
     threading.Thread(target=start_pinggy_tunnel, daemon=True).start()
